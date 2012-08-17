@@ -3,10 +3,53 @@
 class DebugMixin extends Mixin
 {
   static $is_cli = false;
+    
+  static function debug_shutdown_handler() {
+    $error = error_get_last();
+    if($error !== NULL){
+        $info = "[SHUTDOWN] file:".$error['file']." | ln:".$error['line']." | msg:".$error['message'] .PHP_EOL;
+        self::dprint($info);
+    }
+  }
+  
+  // error handler function
+  static function debug_error_handler($errno, $errstr, $errfile, $errline)
+  {
+    $mode = 'development';
+    switch($mode)
+    {
+      case 'development':
+        self::dprint($errstr);
+        die;
+        break;
+      case 'staging':
+      case 'production':
+        $key = md5("$errno|$errstr|$errfile|$errline");
+        $err = ErrorLog::find_or_create_by( array(
+          'conditions'=>array('token = ?', $key),
+          'attributes'=>array(
+            'code'=>$errno,
+            'line_number'=>$errline,
+            'fpath'=>$errfile,
+            'message'=>$errstr,
+            'token'=>$key,
+            'backtrace'=>debug_backtrace()
+          )
+        ));
+        $err->count++;
+        $err->save();
+        break;
+    }
+  }
+  
+  static function debug_exception_handler($exception) {
+    self::dprint( "Uncaught exception: " , $exception->getMessage(), "\n");
+  }
+  
   
   static function dprint($s,$shouldExit=true)
   {
-    if(!self::$is_cli) echo "<pre>";
+    if(!self::$is_cli) echo "\"><pre>";
     ob_start();
     var_dump($s);
     $out = ob_get_contents();
@@ -75,7 +118,7 @@ class DebugMixin extends Mixin
       }
     }
     if(!self::$is_cli) echo( "</table>");
-    trigger_error($err, E_USER_ERROR);
+    //trigger_error($err, E_USER_ERROR);
   }
   
   static function s_var_export($v)
