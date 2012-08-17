@@ -28,9 +28,9 @@ class DebugMixin extends Mixin
     {
       if(self::$is_cli)
       {
-        $err .= s_var_export($data);
+        $err .= W::s_var_export($data);
       } else {
-        $err = $err."<br/><pre>".htmlentities(s_var_export($data))."</pre>";
+        $err = $err."<br/><pre>".htmlentities(W::s_var_export($data))."</pre>";
       }
     }
     if(!self::$is_cli)
