@@ -118,6 +118,7 @@ class DebugMixin extends Mixin
       }
     }
     if(!self::$is_cli) echo( "</table>");
+    die;
     //trigger_error($err, E_USER_ERROR);
   }
   
