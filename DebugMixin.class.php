@@ -3,43 +3,26 @@
 class DebugMixin extends Mixin
 {
   static $is_cli = false;
-    
+  
   static function debug_shutdown_handler() {
     $error = error_get_last();
-    if($error !== NULL){
-        $info = "[SHUTDOWN] file:".$error['file']." | ln:".$error['line']." | msg:".$error['message'] .PHP_EOL;
-        self::dprint($info);
+    if($error !== NULL)
+    {
+      self::debug_error_handler(0, $error['message'], $error['file'], $error['line']);
     }
   }
   
   // error handler function
   static function debug_error_handler($errno, $errstr, $errfile, $errline)
   {
-    $mode = 'development';
-    switch($mode)
+    $config = W::module('debug');
+    
+    if($config['should_display_errors'])
     {
-      case 'development':
-        self::dprint($errstr);
-        die;
-        break;
-      case 'staging':
-      case 'production':
-        $key = md5("$errno|$errstr|$errfile|$errline");
-        $err = ErrorLog::find_or_create_by( array(
-          'conditions'=>array('token = ?', $key),
-          'attributes'=>array(
-            'code'=>$errno,
-            'line_number'=>$errline,
-            'fpath'=>$errfile,
-            'message'=>$errstr,
-            'token'=>$key,
-            'backtrace'=>debug_backtrace()
-          )
-        ));
-        $err->count++;
-        $err->save();
-        break;
+      self::dprint($errstr,false);
     }
+    
+    W::action('error', $errno, $errstr, $errfile, $errline);
   }
   
   static function debug_exception_handler($exception) {
