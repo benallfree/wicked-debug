@@ -8,7 +8,7 @@ class DebugMixin extends Mixin
     $error = error_get_last();
     if($error !== NULL)
     {
-      self::debug_error_handler(0, $error['message'], $error['file'], $error['line']);
+      self::debug_error_handler(0, 'SHUTDOWN ERROR: '.$error['message'], $error['file'], $error['line']);
     }
   }
   
@@ -19,7 +19,7 @@ class DebugMixin extends Mixin
     
     if($config['should_display_errors'])
     {
-      self::dprint($errstr,false);
+      self::dprint($errstr);
     }
     
     W::action('error', $errno, $errstr, $errfile, $errline);
