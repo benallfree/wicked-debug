@@ -19,14 +19,14 @@ class DebugMixin extends Mixin
     
     if($config['should_display_errors'])
     {
-      self::dprint($errstr);
+      self::dprint($errstr . " in {$errfile}:{$errline}");
     }
     
     W::action('error', $errno, $errstr, $errfile, $errline);
   }
   
   static function debug_exception_handler($exception) {
-    self::dprint( "Uncaught exception: " , $exception->getMessage(), "\n");
+    self::error( "Uncaught exception: " . $exception->getMessage());
   }
   
   
