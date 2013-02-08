@@ -1,8 +1,8 @@
 <?
 if($config['enabled'])
 {
-  error_reporting(E_ALL | E_STRICT);
-  ini_set('display_errors', 'stdout');
+  error_reporting($config['error_reporting']);
+  ini_set('display_errors', $config['error_output_stream']);
 }
 
 require_once('DebugMixin.class.php');

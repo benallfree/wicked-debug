@@ -4,8 +4,15 @@ class DebugMixin extends Mixin
 {
   static $is_cli = false;
   
+  static function init()
+  {
+    self::$is_cli = isset($_SERVER['SSH_CLIENT']);
+  }
+  
   static function debug_shutdown_handler() {
     $error = error_get_last();
+    $config = W::module('debug');
+    if($config['wicked_only'] && strpos($error['message'], 'Wicked')===false) return;
     if($error !== NULL)
     {
       self::debug_error_handler(0, 'SHUTDOWN ERROR: '.$error['message'], $error['file'], $error['line']);
@@ -16,6 +23,8 @@ class DebugMixin extends Mixin
   static function debug_error_handler($errno, $errstr, $errfile, $errline)
   {
     $config = W::module('debug');
+
+    if($config['wicked_only'] && strpos($errstr, 'Wicked')===false) return;
     
     if($config['should_display_errors'])
     {
@@ -26,9 +35,26 @@ class DebugMixin extends Mixin
   }
   
   static function debug_exception_handler($exception) {
+    var_dump($exception);
     self::error( "Uncaught exception: " . $exception->getMessage());
   }
-  
+
+  static function toAscii($itemlist)
+  {
+    $i=0;
+    foreach( $itemlist as $items)
+    {
+     foreach ($items as $key => $value)
+     {
+       if ($i++==0) // print header
+       {
+         printf("[%010s]|",   $key );
+       }
+       printf("[%010s]|",   $value);
+     }
+     echo "\n"; // don't forget the newline at the end of the row!
+    }  
+  }  
   
   static function dprint($s,$shouldExit=true)
   {
@@ -48,8 +74,9 @@ class DebugMixin extends Mixin
   }
   
   
-  static function error($err, $data=null)
+  static function error($err, $data=null, $err_code=0)
   {
+    $err = 'Wicked: '.$err;
     if ($data)
     {
       if(self::$is_cli)
@@ -101,7 +128,7 @@ class DebugMixin extends Mixin
       }
     }
     if(!self::$is_cli) echo( "</table>");
-    die;
+    exit($err_code);
     //trigger_error($err, E_USER_ERROR);
   }
   
